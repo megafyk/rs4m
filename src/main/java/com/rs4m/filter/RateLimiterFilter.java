@@ -1,14 +1,9 @@
 package com.rs4m.filter;
 
 import com.rs4m.annotation.RateLimiter;
+import com.rs4m.observer.RateLimitManager;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +17,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Objects;
 
 /**
@@ -33,8 +31,6 @@ import java.util.Objects;
 @Component
 @AllArgsConstructor
 public class RateLimiterFilter extends OncePerRequestFilter {
-
-    private final ProxyManager<String> proxyManager;
     private final RequestMappingHandlerMapping handlerMapping;
     private final ExpressionParser expressionParser = new SpelExpressionParser();
 
@@ -84,15 +80,14 @@ public class RateLimiterFilter extends OncePerRequestFilter {
      * @throws IOException if an I/O error occurs
      */
     private boolean applyRateLimit(HttpServletRequest request, HttpServletResponse response, RateLimiter rateLimiter) throws IOException {
-
-        // Create bucket configuration from annotation
-        BucketConfiguration bucketConfig = getBucketConfiguration(rateLimiter);
-
         // Resolve client key based on the annotation's key resolver strategy
         String clientKey = resolveClientKey(request, rateLimiter);
-        log.info(clientKey);
+
+        // get bean by bean name
+        RateLimitManager rateLimitManager = (RateLimitManager) request.getAttribute(rateLimiter.rateLimitManager());
+
         // Get or create bucket for this client
-        Bucket bucket = proxyManager.builder().build(clientKey, () -> bucketConfig);
+        Bucket bucket = rateLimitManager.getBucket(clientKey, rateLimiter);
 
         // Try to consume a token from the bucket
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
@@ -111,14 +106,9 @@ public class RateLimiterFilter extends OncePerRequestFilter {
         }
     }
 
-    private BucketConfiguration getBucketConfiguration(RateLimiter rateLimiter) {
-        long tokens = rateLimiter.limit();
-        Duration period = Duration.of(rateLimiter.duration(), rateLimiter.unit());
-        return BucketConfiguration.builder().addLimit(limit -> limit.capacity(tokens).refillGreedy(tokens, period)).build();
-    }
 
     private String resolveClientKey(HttpServletRequest request, RateLimiter rateLimiter) {
-        String prefix = "MEGAFYK" + "rate_limit_" + request.getRequestURI() + ":";
+        String prefix = "rate_limit_" + request.getRequestURI() + ":";
 
         switch (rateLimiter.keyResolver()) {
             case HEADER:

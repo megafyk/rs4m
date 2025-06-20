@@ -16,6 +16,14 @@ import java.time.temporal.ChronoUnit;
 public @interface RateLimiter {
 
     /**
+     * Optional name for the rate limit. If not provided, the default value is used.
+     * This can be used to differentiate between different rate limits in logs or metrics.
+     *
+     * @return the name of the rate limit
+     */
+    String value() default "";
+
+    /**
      * Maximum number of requests allowed within the specified time window.
      *
      * @return the limit of requests
@@ -61,6 +69,14 @@ public @interface RateLimiter {
      * @return the SpEL expression
      */
     String keyExpression() default "";
+
+    /**
+     * The rate limit manager to use for handling rate limit events.
+     * This should be a bean that implements the RateLimitManager interface.
+     *
+     * @return the rate limit manager
+     */
+    String rateLimitManager() default "defaultRateLimitManager";
 
     /**
      * Enumeration of key resolver strategies.
