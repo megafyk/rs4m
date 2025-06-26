@@ -1,4 +1,4 @@
-package com.rs4m;
+package com.rs4m.api;
 
 import com.rs4m.annotation.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
-@RequestMapping("/api/dummy")
+@RequestMapping("/rs4m/dummy")
 @Slf4j
 public class DummyController {
 

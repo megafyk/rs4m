@@ -1,17 +1,11 @@
 package com.rs4m.observer;
 
-public interface Subscriber {
-    /**
-     * Receives an update from the publisher.
-     *
-     * @param event the event object containing the update
-     */
-    void update(Object event);
 
+public interface Subscriber<T> {
     /**
-     * Returns the unique identifier for this subscriber.
+     * Updates the subscriber with the given event.
      *
-     * @return the subscriber ID
+     * @param event the event to update the subscriber with
      */
-    String getId();
+    void update(T event);
 }

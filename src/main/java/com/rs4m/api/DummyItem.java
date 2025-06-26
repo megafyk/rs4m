@@ -1,4 +1,4 @@
-package com.rs4m;
+package com.rs4m.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

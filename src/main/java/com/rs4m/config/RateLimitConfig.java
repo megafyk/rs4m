@@ -18,7 +18,7 @@ import java.time.Duration;
 
 @Configuration
 @EnableCaching
-@EnableConfigurationProperties(RateLimiterProperties.class)
+@EnableConfigurationProperties({RateLimiterProperties.class, RateLimitProfileProperties.class})
 public class RateLimitConfig {
 
     @Bean("proxyManagerMaster")
