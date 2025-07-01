@@ -2,11 +2,14 @@ package com.rs4m.filter;
 
 import com.rs4m.annotation.RateLimiter;
 import com.rs4m.observer.RateLimitManager;
+import com.rs4m.rule.RuleEngine;
+import com.rs4m.rule.RuleEngineManager;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -15,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.servlet.FilterChain;
@@ -33,15 +37,19 @@ import java.util.Objects;
 public class RateLimiterFilter extends OncePerRequestFilter {
     private final RequestMappingHandlerMapping handlerMapping;
     private final ExpressionParser expressionParser = new SpelExpressionParser();
+    private final ApplicationContext applicationContext;
 
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         try {
-            // Find handler method for this request
-            HandlerMethod handlerMethod = (HandlerMethod) Objects.requireNonNull(handlerMapping.getHandler(request)).getHandler();
-
+            HandlerExecutionChain handler = handlerMapping.getHandler(request);
+            if (handler == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            HandlerMethod handlerMethod = (HandlerMethod) handler.getHandler();
             // Check for @RateLimiter annotation on method
             RateLimiter rateLimiterAnnotation = handlerMethod.getMethodAnnotation(RateLimiter.class);
 
@@ -80,11 +88,23 @@ public class RateLimiterFilter extends OncePerRequestFilter {
      * @throws IOException if an I/O error occurs
      */
     private boolean applyRateLimit(HttpServletRequest request, HttpServletResponse response, RateLimiter rateLimiter) throws IOException {
-        // Resolve client key based on the annotation's key resolver strategy
-        String clientKey = resolveClientKey(request, rateLimiter);
+        // get bean rule engine by bean name
+        RuleEngineManager ruleEngineManager = null;
+        if (!rateLimiter.ruleEngineManager().isEmpty()) {
+            ruleEngineManager = applicationContext.getBean(rateLimiter.ruleEngineManager(), RuleEngineManager.class);
+        }
 
-        // get bean by bean name
-        RateLimitManager rateLimitManager = (RateLimitManager) request.getAttribute(rateLimiter.rateLimitManager());
+        // Resolve client key based on the annotation's key resolver strategy
+        String clientKey = resolveClientKey(request, rateLimiter, ruleEngineManager);
+        if (clientKey.isEmpty()) {
+            log.warn("Client key is null or empty for request: {}", request.getRequestURI());
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.getWriter().append("Internal server error: Client key is null or empty");
+            return false;
+        }
+
+        // get bean rate limit by bean name
+        RateLimitManager rateLimitManager = applicationContext.getBean(rateLimiter.rateLimitManager(), RateLimitManager.class);
 
         // Get or create bucket for this client
         Bucket bucket = rateLimitManager.getBucket(clientKey, rateLimiter);
@@ -107,9 +127,25 @@ public class RateLimiterFilter extends OncePerRequestFilter {
     }
 
 
-    private String resolveClientKey(HttpServletRequest request, RateLimiter rateLimiter) {
-        String prefix = "rate_limit_" + request.getRequestURI() + ":";
+    private String resolveClientKey(HttpServletRequest request, RateLimiter rateLimiter, RuleEngineManager ruleEngineManager) {
+        String prefix = "rs4m_rl_" + request.getRequestURI() + ":";
 
+        // base by rule engine
+        if (ruleEngineManager != null) {
+            RuleEngine ruleEngine = ruleEngineManager.getEngine(rateLimiter.ruleEngineManager());
+            if (ruleEngine != null) {
+                try {
+                    ruleEngine.fireRules(request);
+                    String abc = ruleEngine.getResult(String.class);
+                    return prefix + abc;
+                } catch (Exception e) {
+                    log.error("Error firing rules in RuleEngine: {}", rateLimiter.ruleEngineManager(), e);
+                    return "";
+                }
+            }
+        }
+
+        // base by annotation configuration
         switch (rateLimiter.keyResolver()) {
             case HEADER:
                 String headerValue = request.getHeader(rateLimiter.headerName());

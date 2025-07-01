@@ -21,7 +21,7 @@ public @interface RateLimiter {
      *
      * @return the name of the rate limit
      */
-    String value() default "";
+    String value();
 
     /**
      * Maximum number of requests allowed within the specified time window.
@@ -77,6 +77,14 @@ public @interface RateLimiter {
      * @return the rate limit manager
      */
     String rateLimitManager() default "defaultRateLimitManager";
+
+    /**
+     * The name of the rate limit profile to use for this rate limiter.
+     * This should match a profile defined in the application properties.
+     *
+     * @return the name of the rate limit profile
+     */
+    String ruleEngineManager() default "";
 
     /**
      * Enumeration of key resolver strategies.

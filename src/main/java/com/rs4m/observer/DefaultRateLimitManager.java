@@ -52,7 +52,7 @@ public class DefaultRateLimitManager implements RateLimitManager, Subscriber<Map
         ConfigurationBuilder builder = BucketConfiguration.builder();
         for (RateLimitProfileProperties.Bandwidth bandwidth : bandwidths.values()) {
             long tokens = bandwidth.getLimit();
-            Duration period = Duration.of(bandwidth.getDuration(), ChronoUnit.valueOf(bandwidth.getTimeUnit().toUpperCase()));
+            Duration period = Duration.of(bandwidth.getDuration(), ChronoUnit.valueOf(bandwidth.getTimeUnit().getValue()));
             builder.addLimit(limit -> limit.capacity(tokens).refillGreedy(tokens, period));
         }
         return builder.build();
@@ -82,7 +82,6 @@ public class DefaultRateLimitManager implements RateLimitManager, Subscriber<Map
                 }
             }
         }
-        log.info("Updated bucket configurations.");
     }
 
 

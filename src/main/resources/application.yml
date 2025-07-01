@@ -2,18 +2,18 @@ r4sm:
   rate:
     default:
       buckets:
-        dummy_bucket:
+        dummy_bucket_2:
           enable: true
           version: 0.1
           bandwidths:
             burst_limit:
               id: burst_limit
-              limit: 10
+              limit: 5
               duration: 1
               timeUnit: MINUTES
             biz_limit:
               id: biz_limit
-              limit: 10
+              limit: 1
               duration: 1
               timeUnit: MINUTES
         foo_bucket:

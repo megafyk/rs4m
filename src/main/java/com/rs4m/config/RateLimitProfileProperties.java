@@ -1,6 +1,8 @@
 package com.rs4m.config;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Map;
@@ -22,6 +24,17 @@ public class RateLimitProfileProperties {
         private String id;
         private int limit = 10;
         private long duration = 1;
-        private String timeUnit = "MINUTES";
+        private TimeUnit timeUnit = TimeUnit.MINUTES;
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public enum TimeUnit {
+        SECONDS("SECONDS"),
+        MINUTES("MINUTES"),
+        HOURS("HOURS"),
+        DAYS("DAYS");
+
+        final String value;
     }
 }
