@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
 @ConfigurationProperties(prefix = "rs4m.redisson")
-public class RedissonClusterConfigurationProperties {
+public class Rs4mRedissonProperties {
     // redis cluster default config
     private boolean enabled = true;
     private boolean checkSlotsCoverage = true;

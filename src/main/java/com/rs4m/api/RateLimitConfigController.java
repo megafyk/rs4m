@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/rs4m/rate-limit")
+@RequestMapping("/rs4m/actuator/rate-limit")
 public class RateLimitConfigController {
     private final EventManager eventManager;
 
