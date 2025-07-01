@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.rs4m</groupId>
     <artifactId>rs4m</artifactId>
-    <version>1.0.0</version>
+    <version>0.0.1</version>
     <name>rs4m</name>
     <description>A Spring Boot library for resilience service</description>
 
