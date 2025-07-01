@@ -114,16 +114,16 @@ r4sm:
 Update rate limit configurations at runtime:
 
 ```bash
-curl -X POST http://localhost:8080/rs4m/rate-limit/buckets \
+curl -X POST http://localhost:8080/rs4m/actuator/rate-limit/buckets \
   -H "Content-Type: application/json" \
   -d '{
-    "user_bucket": {
+    "dummy_bucket": {
       "enable": true,
-      "version": "2.0",
+      "version": "0.2",
       "bandwidths": {
-        "standard": {
-          "id": "standard",
-          "limit": 100,
+        "biz_limit": {
+          "id": "biz_limit",
+          "limit": 1,
           "duration": 1,
           "timeUnit": "MINUTES"
         }
@@ -138,13 +138,13 @@ RS4M follows a modular architecture with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    @RateLimiter Annotation                 │
+│                    @RateLimiter Annotation                  │
 ├─────────────────────────────────────────────────────────────┤
-│                   RateLimiterFilter                        │
+│                   RateLimiterFilter                         │
 ├─────────────────────────────────────────────────────────────┤
-│  RateLimitManager  │  RuleEngineManager  │  EventManager   │
+│  RateLimitManager  │  RuleEngineManager  │  EventManager    │
 ├─────────────────────────────────────────────────────────────┤
-│                      Bucket4j + Redis                      │
+│                      Bucket4j + Redis                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
