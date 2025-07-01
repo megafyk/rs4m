@@ -22,7 +22,7 @@ public class DummyController {
 
     // Get all items
     @GetMapping
-    @RateLimiter(value="dummy_bucket_2")
+    @RateLimiter(value="dummy_bucket")
     public List<DummyItem> getAllItems() {
         log.info("Fetching all dummy items");
         return new ArrayList<>(itemsDb.values());

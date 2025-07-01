@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.temporal.ChronoUnit;
 
 @Data
-@ConfigurationProperties(prefix = "rs4m.rate-limiter")
+@ConfigurationProperties(prefix = "rs4m.rate")
 public class RateLimiterProperties {
     /**
      * Whether rate limiting is enabled.

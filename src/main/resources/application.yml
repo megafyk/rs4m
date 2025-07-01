@@ -2,7 +2,7 @@ r4sm:
   rate:
     default:
       buckets:
-        dummy_bucket_2:
+        dummy_bucket:
           enable: true
           version: 0.1
           bandwidths:
