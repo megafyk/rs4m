@@ -61,7 +61,7 @@ public class DummyController {
 
     // Get all items
     @GetMapping
-    // define bucket name + bucket rate limit manager + rule engine manager for key resolver bucket
+    // define bucket name + bucket rate limit manager + rule engine manager (optional) for key resolver bucket
     @RateLimiter(value="dummy_bucket", rateLimitManager = "defaultRateLimitManager", ruleEngineManager = "defaultRuleEngineManager")
     public List<DummyItem> getAllItems() {
         log.info("Fetching all dummy items");
